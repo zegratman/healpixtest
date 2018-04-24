@@ -8,18 +8,29 @@ import java.sql.SQLException;
 
 public class PostgreSQLIngestor implements Closeable {
 
+    // INSERT prepared statement
     private static final String INSERT_STATEMENT = "INSERT INTO public.sources VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
 
+    // CSV column delimiter
     private static final String COL_DELIMITER = ";";
 
+    // Prepared statement
     private PreparedStatement preparedStatement;
 
+    // Insert batch size
     private Integer batchSize = 0;
 
+    // Current batch size of the ingestor
     private Integer currentBatchSize = 0;
 
+    // Ingestion time
     private Long ingestionTime = 0L;
 
+    /**
+     * Constructor
+     * @param connection the connection to the database
+     * @param batchSize the size of the insert batch
+     */
     public PostgreSQLIngestor(Connection connection, Integer batchSize) {
         this.batchSize = batchSize <= 0 ? 1 : batchSize;
         try {
@@ -29,6 +40,10 @@ public class PostgreSQLIngestor implements Closeable {
         }
     }
 
+    /**
+     * Ingest a line
+     * @param line the line from the CSV file to ingest
+     */
     public void ingest(String line) {
         String[] contents = line.split(COL_DELIMITER);
         try {
@@ -59,10 +74,18 @@ public class PostgreSQLIngestor implements Closeable {
         }
     }
 
+    /**
+     * Getting the ingestion time
+     * @return a time reflecting the total ingestion time (calling executeBatch() on the statement)
+     */
     public Long getIngestionTime() {
         return ingestionTime;
     }
 
+    /**
+     * Closing the ingestor
+     * @throws IOException
+     */
     public void close() throws IOException {
         try {
             preparedStatement.executeBatch();
